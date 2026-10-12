@@ -1062,9 +1062,13 @@ int AgregarColumna(Dataframe *df, char *nombre , TipoDato t) {
 }
 
 int Quarter(Dataframe *df, Columna *col, char* nombre) {
+    // AgregarColumna() reallocs df->columna, which can move the array and
+    // leave 'col' dangling. Remember its position and re-derive it after.
+    int colIdx = (int)(col - df->columna);
     if (AgregarColumna(df, nombre, TEXTO) == -1) {
         return -1;
     }
+    col = &df->columna[colIdx];
 
 
 
