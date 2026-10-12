@@ -65,6 +65,13 @@ expect "sort reports unknown columns" "Columna no encontrada"
 run "load examples/data1" "sort Column3 up" "quit"
 expect "sort rejects an invalid order" "tiene que ser 'asc' o 'des'"
 
+run "load examples/data1" "sort Column3 asc" "view 2" "quit"
+expect "view after sort asc shows the smallest value first" "JNIRJ               2005/10/15          -489.740000"
+expect "view after sort asc shows rows in order" "FLFOD               2016/5/9            -339.390000"
+
+run "load examples/data1" "sort Column3 des" "view 1" "quit"
+expect "view after sort des shows the largest value first" "KJJKZ               2011/8/3            818.070000"
+
 run "view" "quit"
 expect "commands need an active dataframe" "No hay dataframe activo"
 

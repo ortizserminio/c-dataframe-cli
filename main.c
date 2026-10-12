@@ -337,7 +337,11 @@ int main() {
                         if (dfActivo->columna[j].esNulo[data_row_idx]) {
                             printf("%-20s", "#N/A");
                         } else {
-                            printf("%-20s", printElemento(dfActivo, j, data_row_idx));
+                            // printElemento() maps the logical row i through
+                            // df->indice itself, so pass i, not indice[i].
+                            char *texto = printElemento(dfActivo, j, i);
+                            printf("%-20s", texto ? texto : "");
+                            free(texto);
                         }
                     }
                     printf("\n");
@@ -349,7 +353,11 @@ int main() {
                         if (dfActivo->columna[j].esNulo[data_row_idx]) {
                             printf("%-20s", "#N/A");
                         } else {
-                            printf("%-20s", printElemento(dfActivo, j, data_row_idx));
+                            // printElemento() maps the logical row i through
+                            // df->indice itself, so pass i, not indice[i].
+                            char *texto = printElemento(dfActivo, j, i);
+                            printf("%-20s", texto ? texto : "");
+                            free(texto);
                         }
                     }
                     printf("\n");
