@@ -244,7 +244,8 @@ Nodo* Load(char *nombre, char separator)
     if (!df) {                         /* liberar buffers y salir */
         for (int k=0;k<rows;++k) free(data_lines[k]);
         free(data_lines);  free(tipos);
-        for (int j=0;j<numColumnas;++j) free(headers[j]); free(headers);
+        for (int j=0;j<numColumnas;++j) free(headers[j]);
+        free(headers);
         return NULL;
     }
 
@@ -258,7 +259,8 @@ Nodo* Load(char *nombre, char separator)
         LiberarDataframe(df);
         for (int k=0;k<rows;++k) free(data_lines[k]);
         free(data_lines);  free(tipos);
-        for (int j=0;j<numColumnas;++j) free(headers[j]); free(headers);
+        for (int j=0;j<numColumnas;++j) free(headers[j]);
+        free(headers);
         return NULL;
     }
     for (int r=0; r<rows; ++r) if (df->indice) df->indice[r] = r;
@@ -282,7 +284,8 @@ Nodo* Load(char *nombre, char separator)
             LiberarDataframe(df);
             for (int k=0;k<rows;++k) free(data_lines[k]);
             free(data_lines);  free(tipos);
-            for (int j=0;j<numColumnas;++j) free(headers[j]); free(headers);
+            for (int j=0;j<numColumnas;++j) free(headers[j]);
+            free(headers);
             return NULL;
         }
     }
@@ -294,7 +297,8 @@ Nodo* Load(char *nombre, char separator)
             LiberarDataframe(df);
             for (int k=r;k<rows;++k) free(data_lines[k]);
             free(data_lines);  free(tipos);
-            for (int j=0;j<numColumnas;++j) free(headers[j]); free(headers);
+            for (int j=0;j<numColumnas;++j) free(headers[j]);
+            free(headers);
             return NULL;
         }
 
@@ -311,7 +315,8 @@ Nodo* Load(char *nombre, char separator)
             } else if (c->tipo == TEXTO) {
                 ((char**)c->datos)[r] = strdup(tok);
                 if (!((char**)c->datos)[r]) { free(aux); LiberarDataframe(df); /* …free… */ 
-                    for (int k=r;k<rows;++k) free(data_lines[k]); free(data_lines);
+                    for (int k=r;k<rows;++k) free(data_lines[k]);
+                    free(data_lines);
                     free(tipos); for (int j=0;j<numColumnas;++j) free(headers[j]); free(headers);
                     return NULL; }
             } else if (c->tipo == NUMERICO) {
@@ -555,7 +560,6 @@ int anyadirNodo(Nodo *nuevo, Lista *laGranLista) {
     if (laGranLista->primero == NULL) {
         laGranLista->primero = nuevo;
     } else {
-        Nodo *temp = laGranLista->primero; // <-- Pequeño error de tipeo aquí, debería ser laGranLista->primero
         Nodo *temp_fixed = laGranLista->primero;
         while (temp_fixed->siguiente != NULL) {
             temp_fixed = temp_fixed->siguiente;
@@ -1366,16 +1370,19 @@ Dataframe* LoadDataframeFromFile(char *nombre, char separator) {
     if (fgets(line, sizeof(line), f) != NULL) {
         Trim(line);
         if (strlen(line) == 0) { 
-            for(int j=0; j<numColumnas; j++) free(headers[j]); free(headers);
+            for(int j=0; j<numColumnas; j++) free(headers[j]);
+            free(headers);
             fclose(f); return NULL; 
         }
         tipos_columnas = (TipoDato*)malloc(numColumnas * sizeof(TipoDato));
         if (tipos_columnas == NULL) { 
-            for(int j=0; j<numColumnas; j++) free(headers[j]); free(headers); fclose(f); return NULL; 
+            for(int j=0; j<numColumnas; j++) free(headers[j]);
+            free(headers); fclose(f); return NULL; 
         }
         char *temp_line_for_types = strdup(line);
         if (temp_line_for_types == NULL) { 
-            for(int j=0; j<numColumnas; j++) free(headers[j]); free(headers); free(tipos_columnas); fclose(f); return NULL; 
+            for(int j=0; j<numColumnas; j++) free(headers[j]);
+            free(headers); free(tipos_columnas); fclose(f); return NULL; 
         }
         char *token = strtok(temp_line_for_types, delimiter_str);
         int i = 0;
@@ -1387,7 +1394,8 @@ Dataframe* LoadDataframeFromFile(char *nombre, char separator) {
         }
         free(temp_line_for_types);
     } else { 
-        for(int j=0; j<numColumnas; j++) free(headers[j]); free(headers);
+        for(int j=0; j<numColumnas; j++) free(headers[j]);
+        free(headers);
         fclose(f); return NULL; 
     }
     
@@ -1398,13 +1406,16 @@ Dataframe* LoadDataframeFromFile(char *nombre, char separator) {
         data_lines = (char**)realloc(data_lines, (current_rows_in_buffer + 1) * sizeof(char*));
         if (data_lines == NULL) { 
             for (int k = 0; k < current_rows_in_buffer; k++) free(data_lines[k]);
-            for(int j=0; j<numColumnas; j++) free(headers[j]); free(headers);
+            for(int j=0; j<numColumnas; j++) free(headers[j]);
+            free(headers);
             free(tipos_columnas); fclose(f); return NULL; 
         }
         data_lines[current_rows_in_buffer] = strdup(line);
         if (data_lines[current_rows_in_buffer] == NULL) {
-            for (int k = 0; k < current_rows_in_buffer; k++) free(data_lines[k]); free(data_lines);
-            for(int j=0; j<numColumnas; j++) free(headers[j]); free(headers);
+            for (int k = 0; k < current_rows_in_buffer; k++) free(data_lines[k]);
+            free(data_lines);
+            for(int j=0; j<numColumnas; j++) free(headers[j]);
+            free(headers);
             free(tipos_columnas); fclose(f); return NULL;
         }
         current_rows_in_buffer++;
@@ -1413,8 +1424,10 @@ Dataframe* LoadDataframeFromFile(char *nombre, char separator) {
     // PASO 4: Create DataFrame structure (similar to Load, but no Nodo)
     df = (Dataframe*)malloc(sizeof(Dataframe));
     if (df == NULL) { 
-        for (int k = 0; k < current_rows_in_buffer; k++) free(data_lines[k]); if(data_lines) free(data_lines);
-        for(int j=0; j<numColumnas; j++) free(headers[j]); free(headers);
+        for (int k = 0; k < current_rows_in_buffer; k++) free(data_lines[k]);
+        if(data_lines) free(data_lines);
+        for(int j=0; j<numColumnas; j++) free(headers[j]);
+        free(headers);
         free(tipos_columnas); fclose(f); return NULL; 
     }
     df->nombre[0] = '\0'; // Temporary DFs might not need a name from this function
@@ -1424,8 +1437,10 @@ Dataframe* LoadDataframeFromFile(char *nombre, char separator) {
     df->columna = (Columna*)malloc(numColumnas * sizeof(Columna));
     if (df->columna == NULL) { 
         free(df); 
-        for (int k = 0; k < current_rows_in_buffer; k++) free(data_lines[k]); if(data_lines) free(data_lines);
-        for(int j_h=0; j_h<numColumnas; j_h++) free(headers[j_h]); free(headers);
+        for (int k = 0; k < current_rows_in_buffer; k++) free(data_lines[k]);
+        if(data_lines) free(data_lines);
+        for(int j_h=0; j_h<numColumnas; j_h++) free(headers[j_h]);
+        free(headers);
         free(tipos_columnas); fclose(f); return NULL; 
     }
 
@@ -1434,8 +1449,10 @@ Dataframe* LoadDataframeFromFile(char *nombre, char separator) {
         if (temp_col == NULL) {
             for (int k = 0; k < j; k++) LiberarColumna(&df->columna[k]);
             free(df->columna); free(df);
-            for (int k = 0; k < current_rows_in_buffer; k++) free(data_lines[k]); if(data_lines) free(data_lines);
-            for(int k_h=0; k_h<numColumnas; k_h++) free(headers[k_h]); free(headers); 
+            for (int k = 0; k < current_rows_in_buffer; k++) free(data_lines[k]);
+            if(data_lines) free(data_lines);
+            for(int k_h=0; k_h<numColumnas; k_h++) free(headers[k_h]);
+            free(headers); 
             free(tipos_columnas); fclose(f); return NULL;
         }
         df->columna[j] = *temp_col;
@@ -1446,8 +1463,10 @@ Dataframe* LoadDataframeFromFile(char *nombre, char separator) {
         df->indice = (int*)malloc(df->numFilas * sizeof(int));
         if (df->indice == NULL) { 
             LiberarDataframe(df);
-            for (int k = 0; k < current_rows_in_buffer; k++) free(data_lines[k]); if(data_lines) free(data_lines);
-            for(int j_h=0; j_h<numColumnas; j_h++) free(headers[j_h]); free(headers);
+            for (int k = 0; k < current_rows_in_buffer; k++) free(data_lines[k]);
+            if(data_lines) free(data_lines);
+            for(int j_h=0; j_h<numColumnas; j_h++) free(headers[j_h]);
+            free(headers);
             free(tipos_columnas); fclose(f); return NULL; 
         }
         for(int k=0; k<df->numFilas; k++) df->indice[k] = k;
@@ -1461,8 +1480,10 @@ Dataframe* LoadDataframeFromFile(char *nombre, char separator) {
         char *temp_data_line = strdup(current_data_line);
         if (temp_data_line == NULL) { 
             LiberarDataframe(df);
-            for (int l = 0; l < current_rows_in_buffer; l++) free(data_lines[l]); if(data_lines) free(data_lines);
-            for(int j_h=0; j_h<numColumnas; j_h++) free(headers[j_h]); free(headers);
+            for (int l = 0; l < current_rows_in_buffer; l++) free(data_lines[l]);
+            if(data_lines) free(data_lines);
+            for(int j_h=0; j_h<numColumnas; j_h++) free(headers[j_h]);
+            free(headers);
             free(tipos_columnas); fclose(f); return NULL; 
         }
         char *token = strtok(temp_data_line, delimiter_str);
@@ -1505,7 +1526,8 @@ Dataframe* LoadDataframeFromFile(char *nombre, char separator) {
     // Free temporary buffers
     for (int k_dl = 0; k_dl < current_rows_in_buffer; k_dl++) free(data_lines[k_dl]); 
     if (data_lines) free(data_lines);
-    for (int j = 0; j < numColumnas; j++) { if (headers[j]) free(headers[j]); }
+    for (int j = 0; j < numColumnas; j++) { if (headers[j]) free(headers[j]);
+    }
     if (headers) free(headers);
     if (tipos_columnas) free(tipos_columnas);
 

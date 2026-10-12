@@ -15,17 +15,16 @@ int main() {
     char prompt[100] = "?";
     char com[100];
     char aux[100];
-    char * numeroDf;
 
     char * comtok[100];
     char separadores[10] = " \n\t\r";
    
-    int numarg, n, asc, i, numDF = 0;
+    int numarg, i, numDF = 0;
 
     Lista * laGranLista = NULL;
     Nodo * nodoActivo = NULL, * nodoAux = NULL;
     Dataframe * dfActivo = NULL;
-    Columna * col1 = NULL, * col2 = NULL, * colRes = NULL;
+    Columna * col1 = NULL;
 
     laGranLista = malloc(sizeof(Lista));
     laGranLista -> numDFs = 0;
