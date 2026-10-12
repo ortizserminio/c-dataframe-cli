@@ -1011,12 +1011,16 @@ int Save(Dataframe *df, char *nombre, char separator) {
                 if (df->columna[j].tipo == TEXTO) {
                     fprintf(f, "%s", ((char **)df->columna[j].datos)[original_row_idx]);
                 } else if (df->columna[j].tipo == NUMERICO) {
-                    fprintf(f, "%.g", ((double *)df->columna[j].datos)[original_row_idx]); // Formato para double
+                    // %.15g keeps up to 15 significant digits (exact for
+                    // values read from the CSV); "%.g" kept only one.
+                    fprintf(f, "%.15g", ((double *)df->columna[j].datos)[original_row_idx]);
                 } else if (df->columna[j].tipo == FECHA) {
                     // Asegúrate de que tu struct Fecha tenga los campos tm_mday, tm_mon, tm_year
                     // El formato "dd/mm/aaaa" es común, ajusta según tu definición de Fecha
                     Fecha *f_data = &((Fecha *)df->columna[j].datos)[original_row_idx];
-                    fprintf(f, "%02d/%02d/%d", f_data->tm_mday, f_data->tm_mon + 1, f_data->tm_year + 1900); // tm_year es años desde 1900
+                    // Same YYYY/MM/DD format that Load() accepts. AFecha() stores
+                    // the full year in tm_year (not years since 1900).
+                    fprintf(f, "%04d/%02d/%02d", f_data->tm_year, f_data->tm_mon + 1, f_data->tm_mday);
                 }
             }
             if (j < df->numColumnas - 1) {

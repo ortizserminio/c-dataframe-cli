@@ -16,6 +16,7 @@ build/test_lib: tests/test_lib.c lib.c lib.h
 	$(CC) $(CFLAGS) -I. tests/test_lib.c lib.c -o $@ $(LDLIBS)
 
 unit: build/test_lib
+	@mkdir -p tests/out
 	./build/test_lib
 
 e2e: dataframe

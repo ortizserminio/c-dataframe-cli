@@ -216,6 +216,33 @@ static void test_save_rejects_invalid_input(void) {
     CHECK(Save(NULL, "x.csv", ',') == -1);
 }
 
+// Saving and loading again must give back the same types and values.
+static void test_save_round_trip(void) {
+    Dataframe* df = load_example();
+    if (!df) { CHECK(0); return; }
+    const char* path = "tests/out/round_trip.csv";
+    CHECK(Save(df, (char*)path, ';') == 0);
+
+    Nodo* n = Load((char*)path, ';');
+    CHECK(n != NULL);
+    if (!n) { LiberarDataframe(df); return; }
+    Dataframe* back = n->df;
+    CHECK(back->numFilas == df->numFilas);
+    CHECK(back->numColumnas == df->numColumnas);
+    for (int j = 0; j < df->numColumnas && j < back->numColumnas; j++)
+        CHECK(back->columna[j].tipo == df->columna[j].tipo);
+
+    for (int i = 0; i < df->numFilas && i < back->numFilas; i++) {
+        CHECK_NEAR(((double*)back->columna[2].datos)[i],
+                   ((double*)df->columna[2].datos)[i]);
+        Fecha* a = &((Fecha*)df->columna[1].datos)[i];
+        Fecha* b = &((Fecha*)back->columna[1].datos)[i];
+        CHECK(compararValores(a, 0, b, 0, FECHA) == 0);
+    }
+    LiberarDataframe(back);
+    LiberarDataframe(df);
+}
+
 int main(void) {
     test_validators();
     test_dates();
@@ -227,6 +254,7 @@ int main(void) {
     test_stats();
     test_filter();
     test_save_rejects_invalid_input();
+    test_save_round_trip();
     printf("%d/%d checks passed\n", checks - failures, checks);
     return failures == 0 ? 0 : 1;
 }
