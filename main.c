@@ -1,16 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <windows.h>
+#include "console.h"
 #include <time.h>
 #include <dirent.h> 
 #include "lib.h"
 
-// gcc lib.c main.c -o main.exe
+// Build: make   (or: gcc -std=gnu99 main.c lib.c -o dataframe -lm)
 
 int main() {
 
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
     // Variables
     char prompt[100] = "?";
@@ -37,7 +36,7 @@ int main() {
 
     while (1) {
         // Establecer el color del prompt a blanco
-        SetConsoleTextAttribute(hConsole, 7);
+        set_color(7);
         
         // --- LÓGICA DE IMPRESIÓN DEL PROMPT ---
         // Construye el prompt con el formato [nombre:filas,columnas]:>
@@ -83,9 +82,9 @@ int main() {
 
         if (strcmp(comtok[0], "quit") == 0) {
             if (numarg != 1) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: quit no acepta argumentos\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
@@ -95,18 +94,18 @@ int main() {
                 nodoAux = nodoAux -> siguiente;
             }
 
-            SetConsoleTextAttribute(hConsole, 2);
+            set_color(2);
             printf("EXIT PROGRAM\n");
-            SetConsoleTextAttribute(hConsole, 7);
+            set_color(7);
 
             return 0;
         }else if (strcmp(comtok[0], "load") == 0) {
             // 'load' necesita 1 o 2 argumentos adicionales: nombre_fichero [separador]
             if (numarg < 2 || numarg > 3) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: 'load' necesita el nombre de un archivo y opcionalmente un separador.\n");
                 printf("Uso: load <nombre_fichero> [<sep>]\n");
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
@@ -129,9 +128,9 @@ int main() {
                 if (strlen(finalFilename) + strlen(".csv") < sizeof(finalFilename)) {
                     strcat(finalFilename, ".csv");
                 } else {
-                    SetConsoleTextAttribute(hConsole, 4); // Rojo
+                    set_color(4); // Rojo
                     printf("Error: El nombre del archivo es demasiado largo para añadir '.csv'.\n");
-                    SetConsoleTextAttribute(hConsole, 7); // Blanco
+                    set_color(7); // Blanco
                     continue;
                 }
             }
@@ -139,9 +138,9 @@ int main() {
 
             if (numarg == 3) { // Si se proporciona un separador
                 if (strlen(comtok[2]) != 1) { // El separador debe ser un solo carácter
-                    SetConsoleTextAttribute(hConsole, 4); // Rojo
+                    set_color(4); // Rojo
                     printf("Error: El separador debe ser un solo caracter.\n");
-                    SetConsoleTextAttribute(hConsole, 7); // Blanco
+                    set_color(7); // Blanco
                     continue;
                 }
                 separator = comtok[2][0];
@@ -151,10 +150,10 @@ int main() {
             nodoAux = Load(finalFilename, separator);
 
             if (nodoAux == NULL) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 // Usamos originalFilename en el mensaje de error si no se pudo cargar
                 printf("Error: No se pudo cargar el archivo '%s'.\n", originalFilename);
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             } else {
                 // Si nodoAux NO es NULL, entonces es seguro acceder a sus miembros
@@ -164,27 +163,27 @@ int main() {
                 snprintf(dfActivo->nombre, sizeof(dfActivo->nombre), "df%d", laGranLista->numDFs);
                 anyadirNodo(nodoAux, laGranLista);
 
-                SetConsoleTextAttribute(hConsole, 2); // Verde
+                set_color(2); // Verde
                 // Usamos originalFilename para el mensaje de éxito
                 printf("Archivo '%s' cargado correctamente como '%s' con separador '%c'.\n", originalFilename, dfActivo->nombre, separator);
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
             }
             continue; 
         }else if (strcmp(comtok[0], "describe") == 0) {
 
             /* ----- SINTAXIS :  describe col1 [col2 ...]  ------ */
             if (dfActivo == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);  /* rojo */
+                set_color(4);  /* rojo */
                 printf("Error: no hay dataframe activo.\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
             if (numarg < 2) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: 'describe' requiere al menos un nombre de columna.\n");
                 printf("Uso: describe <col1> [col2] ...\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
@@ -193,9 +192,9 @@ int main() {
                 Columna *c = BuscarColumna(dfActivo, comtok[i]);
                 
                 if (!c) {
-                    SetConsoleTextAttribute(hConsole, 4);
+                    set_color(4);
                     printf("Error: columna '%s' no existe.\n", comtok[i]);
-                    SetConsoleTextAttribute(hConsole, 7);
+                    set_color(7);
                     continue; // Salta a la siguiente columna de la lista de argumentos
                 }
 
@@ -208,31 +207,31 @@ int main() {
                 Stats st = stats_col(c);
 
                 /* 2. Salida en VERDE */
-                SetConsoleTextAttribute(hConsole, 2);
+                set_color(2);
                 printf("%s  (n=%d)\n", c->nombre, st.count);
                 printf("   min = %.6g   Q1  = %.6g   med = %.6g\n", st.min, st.q1, st.med);
                 printf("   mean= %.6g   Q3  = %.6g   max = %.6g\n", st.mean, st.q3, st.max);
                 printf("   std = %.6g\n",  st.std);
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
             }
             continue;
         }else if (strcmp(comtok[0], "meta") == 0) {
             if (numarg != 1) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: meta no acepta argumentos\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
             if (dfActivo == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No hay dataframe activo\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
             printf("Entrando en meta\n");
-            SetConsoleTextAttribute(hConsole, 2);
+            set_color(2);
 
             for (int i = 0; i < dfActivo -> numColumnas; i++) {
                 printf("Columna %d: %s\t", i, dfActivo -> columna[i].nombre);
@@ -246,12 +245,12 @@ int main() {
                 printf("Filas Nulas: %d\n", numNulos(dfActivo -> columna[i]));
             }
 
-            SetConsoleTextAttribute(hConsole, 7);
+            set_color(7);
         }else if (strcmp(comtok[0], "view") == 0) {
             if (dfActivo == NULL) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: No hay dataframe activo.\n");
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
@@ -262,9 +261,9 @@ int main() {
 
             // 1. Validar el número de argumentos
             if (numarg > 2) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: El comando 'view' no acepta mas de un argumento.\n");
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
@@ -273,17 +272,17 @@ int main() {
                 // Asumo que Validar_entero devuelve 1 si la cadena es un entero válido (positivo o negativo)
                 // y 0 en caso contrario.
                 if (Validar_entero(comtok[1]) == 0) {
-                    SetConsoleTextAttribute(hConsole, 4); // Rojo
+                    set_color(4); // Rojo
                     printf("Error: El parametro 'n' debe ser un numero entero.\n");
-                    SetConsoleTextAttribute(hConsole, 7); // Blanco
+                    set_color(7); // Blanco
                     continue;
                 }
                 n_val = atoi(comtok[1]); // n_val puede ser positivo o negativo
 
                 if (n_val == 0) {
-                    SetConsoleTextAttribute(hConsole, 4); // Rojo
+                    set_color(4); // Rojo
                     printf("Error: El valor de 'n' no puede ser 0.\n");
-                    SetConsoleTextAttribute(hConsole, 7); // Blanco
+                    set_color(7); // Blanco
                     continue;
                 }
             }
@@ -322,7 +321,7 @@ int main() {
                 }
             }
 
-            SetConsoleTextAttribute(hConsole, 2); // Color verde para la salida
+            set_color(2); // Color verde para la salida
 
             // Mostrar nombres de las columnas
             for (int i = 0; i < dfActivo->numColumnas; i++) {
@@ -357,28 +356,28 @@ int main() {
                 }
             }
 
-            SetConsoleTextAttribute(hConsole, 7); // Restablecer color a blanco
+            set_color(7); // Restablecer color a blanco
             continue; 
         }else if (strcmp(comtok[0], "sort") == 0){
             if (numarg < 2 || numarg > 3) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: sort necesita 2 o 3 argumentos\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
             if (dfActivo == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No hay dataframe activo\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
             col1 = BuscarColumna(dfActivo, comtok[1]);
             if (col1 == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: Columna no encontrada\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
@@ -389,26 +388,26 @@ int main() {
                 } else if (strcmp(comtok[2], "des") == 0) {
                     asc = 0;
                 } else {
-                    SetConsoleTextAttribute(hConsole, 4);
+                    set_color(4);
                     printf("Error: el tercer argumento tiene que ser 'asc' o 'des'\n");
-                    SetConsoleTextAttribute(hConsole, 7);
+                    set_color(7);
                     continue;
                 }
             }
 
             SortCol(dfActivo, col1, asc);
-            SetConsoleTextAttribute(hConsole, 2);
+            set_color(2);
             printf("Dataframe ordenado por la columna '%s' en orden %s\n", comtok[1], asc ? "ascendente" : "descendente");
-            SetConsoleTextAttribute(hConsole, 7);
+            set_color(7);
 
         }else if (strcmp(comtok[0], "save") == 0) {
             // save [<nombre_fichero>] [<sep>]
             // numarg puede ser 1 (solo 'save'), 2 ('save filename') o 3 ('save filename sep')
 
             if (dfActivo == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No hay dataframe activo para guardar.\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
@@ -419,9 +418,9 @@ int main() {
             if (numarg == 1) { // Solo "save"
                 // Si no se proporciona nombre, usar el nombre del dataframe + ".csv"
                 if (strlen(dfActivo->nombre) == 0) {
-                    SetConsoleTextAttribute(hConsole, 4);
+                    set_color(4);
                     printf("Error: El dataframe activo no tiene un nombre asignado. Debe proporcionar un nombre de fichero.\n");
-                    SetConsoleTextAttribute(hConsole, 7);
+                    set_color(7);
                     continue;
                 }
                 sprintf(filename, "%s.csv", dfActivo->nombre);
@@ -440,54 +439,54 @@ int main() {
 
                 // Verificar el separador
                 if (strlen(comtok[2]) != 1) {
-                    SetConsoleTextAttribute(hConsole, 4);
+                    set_color(4);
                     printf("Error: El separador debe ser un solo caracter.\n");
-                    SetConsoleTextAttribute(hConsole, 7);
+                    set_color(7);
                     continue;
                 }
                 separator = comtok[2][0];
             } else { // Más de 3 argumentos o menos de 1 (nunca debería pasar menos de 1 si ya entró al if "save")
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: Uso incorrecto del comando save.\n");
                 printf("Uso: save [<nombre_fichero>] [<sep>]\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
             // Llamar a la función Save con el DataFrame activo, el nombre del archivo y el separador.
             // La función Save en lib.c necesita ser actualizada para aceptar el separador.
             if (Save(dfActivo, filename, separator) == -1) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No se ha podido guardar el archivo '%s'.\n", filename);
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
             } else {
-                SetConsoleTextAttribute(hConsole, 2);
+                set_color(2);
                 printf("DataFrame guardado exitosamente en '%s' con separador '%c'.\n", filename, separator);
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
             }
             continue;
 
         }else if (strcmp(comtok[0], "filter") == 0) {
             // filter <nombre_columna> eq/neq/gt/lt/get/let <valor>
             if (numarg != 4) { // filter (0), nombre_columna (1), operador (2), valor (3)
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: filter necesita 3 argumentos: <nombre_columna> <operador> <valor>\n");
                 printf("Uso: filter <nombre_columna> eq/neq/gt/lt/get/let <valor>\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
             if (dfActivo == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No hay dataframe activo para filtrar.\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
             Columna *columna_a_filtrar = BuscarColumna(dfActivo, comtok[1]);
             if (columna_a_filtrar == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: Columna '%s' no encontrada en el dataframe activo.\n", comtok[1]);
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
@@ -500,22 +499,22 @@ int main() {
 
             // Si Filtrar devuelve un nuevo Dataframe (o NULL en caso de error)
             if (dfFiltrado == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No se pudo aplicar el filtro o no se encontraron filas que cumplan la condición.\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
             } else {
                 // Reemplazar el dataframe activo con el dataframe filtrado
                 if (nodoActivo != NULL) {
                     LiberarDataframe(nodoActivo->df); // Liberar el dataframe antiguo
                     nodoActivo->df = dfFiltrado;      // Asignar el nuevo dataframe filtrado
                     dfActivo = dfFiltrado;            // Actualizar el puntero dfActivo
-                    SetConsoleTextAttribute(hConsole, 2);
+                    set_color(2);
                     printf("DataFrame filtrado exitosamente. Nuevo número de filas: %d\n", dfActivo->numFilas);
-                    SetConsoleTextAttribute(hConsole, 7);
+                    set_color(7);
                 } else {
-                    SetConsoleTextAttribute(hConsole, 4);
+                    set_color(4);
                     printf("Error interno: nodoActivo es NULL al intentar actualizar el dataframe filtrado.\n");
-                    SetConsoleTextAttribute(hConsole, 7);
+                    set_color(7);
                     LiberarDataframe(dfFiltrado); // Liberar el nuevo dataframe si no se puede asignar
                 }
             }
@@ -523,28 +522,28 @@ int main() {
         }else if (strcmp(comtok[0], "delnull") == 0) {
 
             if (numarg != 2) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: delnull no necesita argumentos\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
             if (dfActivo == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No hay dataframe activo\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
             if (BuscarColumna(dfActivo, comtok[1]) == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: Columna no encontrada\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
             if (EliminarNulos(nodoActivo, dfActivo, BuscarColumna(dfActivo, comtok[1])) == -1) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No se ha podido eliminar los nulos\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             } else {
                 dfActivo = nodoActivo -> df;
@@ -554,21 +553,21 @@ int main() {
         }else if (strcmp(comtok[0], "delcolum") == 0) {
 
             if (numarg != 2) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: delcolum necesita un argumento\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
             if (dfActivo == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No hay dataframe activo\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
             if (BuscarColumna(dfActivo, comtok[1]) == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: Columna no encontrada\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
@@ -579,9 +578,9 @@ int main() {
             }
 
             if (EliminarColumna(dfActivo, i) == -1) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No se ha podido eliminar la columna\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             } else {
                 sprintf(aux, "DF%d: %d,%d", numDF, dfActivo -> numFilas, dfActivo -> numColumnas);
@@ -589,43 +588,43 @@ int main() {
             }
         }else if (strcmp(comtok[0], "quarter") == 0) {
             if (numarg != 3) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: quarter necesita un argumento\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
             if (dfActivo == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No hay dataframe activo\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
             if (BuscarColumna(dfActivo, comtok[1]) == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: Columna no encontrada\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
             if (BuscarColumna(dfActivo, comtok[2]) != NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: Columna ya existente\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
             Quarter(dfActivo, BuscarColumna(dfActivo, comtok[1]), comtok[2]);
         }else if (strcmp(comtok[0], "name") == 0) {
             if (dfActivo == NULL) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: No hay un dataframe activo para cambiarle el nombre.\n");
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
             if (numarg != 2) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: Uso incorrecto del comando 'name'. Sintaxis: name <nuevo_nombre>\n");
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
@@ -633,9 +632,9 @@ int main() {
 
             // Validar la longitud del nombre
             if (strlen(nuevoNombre) > 50) { // Nombre[51] permite 50 + \0
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: El nombre del dataframe no debe exceder de 50 caracteres.\n");
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
@@ -653,9 +652,9 @@ int main() {
             }
 
             if (nombreDuplicado) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: Ya existe otro dataframe con el nombre '%s'. Los nombres deben ser unicos.\n", nuevoNombre);
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
@@ -665,33 +664,33 @@ int main() {
             dfActivo->nombre[sizeof(dfActivo->nombre) - 1] = '\0'; // Asegurar null-termination
 
             // Confirmar el cambio
-            SetConsoleTextAttribute(hConsole, 2); // Verde
+            set_color(2); // Verde
             printf("Nombre del dataframe activo cambiado a: '%s'\n", dfActivo->nombre);
 
             // Actualizar el prompt con SOLO el nuevo nombre del DataFrame activo
             // Esto es crucial para cumplir la especificación del Ejercicio 2.
             strcpy(prompt, dfActivo->nombre);
             
-            SetConsoleTextAttribute(hConsole, 7); // Blanco
+            set_color(7); // Blanco
         }else if (strcmp(comtok[0], "list") == 0) {
             // Verificar si el comando 'list' tiene argumentos (no debería tener)
             if (numarg != 1) { // 'list' es un comando de un solo token, por lo que numarg debe ser 1
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: 'list' no acepta argumentos.\n");
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
             // Verificar si no hay dataframes cargados en memoria
             if (laGranLista->primero == NULL) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("No hay dataframes cargados en memoria.\n");
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
             // Si hay dataframes, listarlos
-            SetConsoleTextAttribute(hConsole, 2); // Verde
+            set_color(2); // Verde
             printf("Dataframes cargados:\n"); // Un encabezado simple es bueno aquí
 
             Nodo *actual = laGranLista->primero;
@@ -709,12 +708,12 @@ int main() {
                 actual = actual->siguiente;
             }
 
-            SetConsoleTextAttribute(hConsole, 7); // Volver al color blanco
+            set_color(7); // Volver al color blanco
         }else if (strcmp(comtok[0], "switch") == 0) {
             if (numarg != 2) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: switch necesita exactamente un argumento\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
@@ -732,52 +731,52 @@ int main() {
             }
 
             if (encontrado) {
-                SetConsoleTextAttribute(hConsole, 2);
+                set_color(2);
                 printf("Cambiado al dataframe: %s\n", dfActivo->nombre);
 
                 // Cambia el prompt para mostrar el nombre del nuevo dataframe activo
                 sprintf(aux, "%s: %d,%d", dfActivo->nombre, dfActivo->numFilas, dfActivo->numColumnas);
                 strcpy(prompt, aux);
 
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
             } else {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: no se encontró un dataframe con ese nombre\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
             if (numarg != 2) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: switch necesita exactamente un argumento\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
             nodoAux = BuscarDataFramePorNombre(laGranLista, comtok[1]);
             if (nodoAux == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: no se encontró un dataframe con ese nombre\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
             dfActivo = nodoAux->df;
             nodoActivo = nodoAux;
 
-            SetConsoleTextAttribute(hConsole, 2);
+            set_color(2);
             printf("Cambiado al dataframe: %s\n", dfActivo->nombre);
 
             // Cambia el prompt para mostrar el nombre del nuevo dataframe activo
             snprintf(aux, sizeof(aux), "%s: %d,%d", dfActivo->nombre, dfActivo->numFilas, dfActivo->numColumnas);
             strcpy(prompt, aux);
 
-            SetConsoleTextAttribute(hConsole, 7);
+            set_color(7);
             }
 
         }else if (strcmp(comtok[0], "prefix") == 0) {
             // 1. Verificar si hay un dataframe activo
             if (dfActivo == NULL) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: No hay un dataframe activo. Cargue uno con 'load' primero.\n");
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
@@ -785,9 +784,9 @@ int main() {
             // Sintaxis: prefix <columna_original> <n> <nueva_columna>
             // Tokens esperados: "prefix", "columna_original", "n", "nueva_columna" = 4 tokens
             if (numarg != 4) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: 'prefix' necesita 3 argumentos. Sintaxis: prefix <col_origen> <num_caracteres> <nueva_col_nombre>\n");
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
@@ -797,9 +796,9 @@ int main() {
 
             // 3. Validar que 'n' sea un número entero
             if (Validar_entero(strNumCaracteres) == 0) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: El segundo argumento (numero de caracteres 'n') debe ser un numero entero.\n");
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
@@ -807,34 +806,34 @@ int main() {
 
             // 4. Validar que 'n' sea mayor que 0
             if (n <= 0) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: El numero de caracteres 'n' debe ser mayor que 0.\n");
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
             // 5. Validar que el nuevo nombre de columna no exista
             if (BuscarColumna(dfActivo, nuevoNombreColumna) != NULL) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: Ya existe una columna con el nombre '%s' en el dataframe activo.\n", nuevoNombreColumna);
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
             // 6. Buscar la columna original
             Columna *colOriginal = BuscarColumna(dfActivo, nombreColumnaOriginal);
             if (colOriginal == NULL) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: La columna original '%s' no fue encontrada en el dataframe activo.\n", nombreColumnaOriginal);
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
             // 7. Validar que la columna original sea de tipo TEXTO
             if (colOriginal->tipo != TEXTO) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: La columna original '%s' debe ser de tipo TEXTO para usar 'prefix'.\n", nombreColumnaOriginal);
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
@@ -851,12 +850,12 @@ int main() {
             nuevaColumna.esNulo = malloc(nuevaColumna.numFilas * sizeof(unsigned char));
 
             if (nuevaColumna.datos == NULL || nuevaColumna.esNulo == NULL) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: No se pudo asignar memoria para la nueva columna.\n");
                 // Es crucial liberar la memoria si una de las asignaciones falla
                 free(nuevaColumna.datos);
                 free(nuevaColumna.esNulo);
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
 
@@ -875,7 +874,7 @@ int main() {
                     if (prefijo == NULL) {
                         // Manejo de error si malloc falla para una cadena individual
                         // Esto es más complejo, pero para el examen, una salida simple podría bastar
-                        SetConsoleTextAttribute(hConsole, 4);
+                        set_color(4);
                         printf("Error: Memoria insuficiente al crear prefijos para la fila %d. Operacion abortada.\n", i);
                         // Liberar lo que ya se asignó en nuevaColumna
                         for (int j = 0; j < i; j++) {
@@ -885,7 +884,7 @@ int main() {
                         }
                         free(nuevaColumna.datos);
                         free(nuevaColumna.esNulo);
-                        SetConsoleTextAttribute(hConsole, 7);
+                        set_color(7);
                         return 1; // Podrías querer salir del main o continuar y manejar esto como error grave
                                  // Para un 'continue' aquí, necesitarías deshacer realloc si ya se hizo.
                                  // Lo más simple es salir.
@@ -903,11 +902,11 @@ int main() {
             // Primero, reasignar espacio para el array de Columnas
             Columna *temp_columna_ptr = realloc(dfActivo->columna, (dfActivo->numColumnas + 1) * sizeof(Columna));
             if (temp_columna_ptr == NULL) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: No se pudo reasignar memoria para anadir la nueva columna al dataframe.\n");
                 // Si realloc falla, debemos liberar la nuevaColumna que ya habíamos creado
                 LiberarColumna(&nuevaColumna); // Asume que tienes una función para liberar una Columna
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue;
             }
             dfActivo->columna = temp_columna_ptr;
@@ -916,23 +915,23 @@ int main() {
             dfActivo->columna[dfActivo->numColumnas] = nuevaColumna;
             dfActivo->numColumnas++; // Incrementar el contador de columnas del DataFrame
 
-            SetConsoleTextAttribute(hConsole, 2); // Verde
+            set_color(2); // Verde
             printf("Nueva columna '%s' creada con los primeros %d caracteres de la columna '%s'.\n", nuevoNombreColumna, n, nombreColumnaOriginal);
-            SetConsoleTextAttribute(hConsole, 7); // Blanco
+            set_color(7); // Blanco
         }else if (strcmp(comtok[0], "add") == 0) {
             if (dfActivo == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No hay dataframe activo. Cargue o seleccione uno primero.\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
             // add <nombre_fichero> [<sep>]
             if (numarg < 2 || numarg > 3) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: 'add' necesita el nombre de un archivo y opcionalmente un separador.\n");
                 printf("Uso: add <nombre_fichero> [<sep>]\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
@@ -948,18 +947,18 @@ int main() {
                 if (strlen(finalFilename) + strlen(".csv") < sizeof(finalFilename)) {
                     strcat(finalFilename, ".csv");
                 } else {
-                    SetConsoleTextAttribute(hConsole, 4);
+                    set_color(4);
                     printf("Error: El nombre del archivo es demasiado largo para anadir '.csv'.\n");
-                    SetConsoleTextAttribute(hConsole, 7);
+                    set_color(7);
                     continue;
                 }
             }
 
             if (numarg == 3) {
                 if (strlen(comtok[2]) != 1) {
-                    SetConsoleTextAttribute(hConsole, 4);
+                    set_color(4);
                     printf("Error: El separador debe ser un solo caracter.\n");
-                    SetConsoleTextAttribute(hConsole, 7);
+                    set_color(7);
                     continue;
                 }
                 separator = comtok[2][0];
@@ -968,38 +967,38 @@ int main() {
             Dataframe *dfTemp = LoadDataframeFromFile(finalFilename, separator);
 
             if (dfTemp == NULL) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No se pudo cargar el archivo '%s' para anadir.\n", originalFilename);
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 continue;
             }
 
             // Check if column count and types match dfActivo
             if (dfActivo->numColumnas != dfTemp->numColumnas) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: El numero de columnas no coincide con el dataframe activo (%d vs %d).\n", dfActivo->numColumnas, dfTemp->numColumnas);
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 LiberarDataframe(dfTemp);
                 continue;
             }
             for (int i = 0; i < dfActivo->numColumnas; i++) {
                 if (dfActivo->columna[i].tipo != dfTemp->columna[i].tipo) {
-                    SetConsoleTextAttribute(hConsole, 4);
+                    set_color(4);
                     printf("Error: El tipo de la columna '%s' (indice %d) no coincide (activo: %d, nuevo: %d).\n", dfActivo->columna[i].nombre, i, dfActivo->columna[i].tipo, dfTemp->columna[i].tipo);
-                    SetConsoleTextAttribute(hConsole, 7);
+                    set_color(7);
                     LiberarDataframe(dfTemp);
                     continue; // Exit the loop and the 'add' command processing
                 }
             }
 
             if (AppendDataframe(dfActivo, dfTemp) != 0) {
-                SetConsoleTextAttribute(hConsole, 4);
+                set_color(4);
                 printf("Error: No se pudo anadir el dataframe.\n");
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
             } else {
-                SetConsoleTextAttribute(hConsole, 2);
+                set_color(2);
                 printf("Dataframe '%s' anadido correctamente. Nuevas dimensiones: %d filas, %d columnas.\n", originalFilename, dfActivo->numFilas, dfActivo->numColumnas);
-                SetConsoleTextAttribute(hConsole, 7);
+                set_color(7);
                 // Prompt will be updated automatically at the start of the next loop
             }
             LiberarDataframe(dfTemp); // Free the temporary dataframe
@@ -1014,9 +1013,9 @@ int main() {
             nodoAux = BuscarDataFramePorNombre(laGranLista, nombreBuscado);
 
             if (nodoAux == NULL) {
-                SetConsoleTextAttribute(hConsole, 4); // Rojo
+                set_color(4); // Rojo
                 printf("Error: No se encontro un dataframe con el nombre '%s'.\n", nombreBuscado);
-                SetConsoleTextAttribute(hConsole, 7); // Blanco
+                set_color(7); // Blanco
                 continue; // El dataframe activo permanece sin cambios.
             }
 
@@ -1024,18 +1023,18 @@ int main() {
             dfActivo = nodoAux->df;
             nodoActivo = nodoAux; // Asegurarse de que el nodo activo también se actualice
 
-            SetConsoleTextAttribute(hConsole, 2); // Verde
+            set_color(2); // Verde
             printf("Cambiado al dataframe: '%s'.\n", dfActivo->nombre);
-            SetConsoleTextAttribute(hConsole, 7); // Blanco
+            set_color(7); // Blanco
 
             // No es necesario actualizar la variable `prompt` global aquí.
             // La lógica al inicio del bucle `while(1)` se encarga de construir y
             // mostrar el prompt con el nombre y las dimensiones del `dfActivo` actualizado.
         }else {
 
-            SetConsoleTextAttribute(hConsole, 4);
+            set_color(4);
             printf("Error: Comando no reconocido\n");
-            SetConsoleTextAttribute(hConsole, 7);
+            set_color(7);
         }
     }
     return 0;

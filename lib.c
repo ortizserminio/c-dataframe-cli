@@ -1,12 +1,14 @@
+// strdup() is POSIX, not ISO C: request it explicitly so it is declared
+// (otherwise it is implicitly int and truncates pointers on 64-bit).
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
 #include <dirent.h>
-#include <windows.h>
 #include "lib.h"
-#include <io.h>
 
 ///////// Ampliaciones //////////
 #include <math.h>     /* sqrt, ceil, floor … */

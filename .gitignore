@@ -1,0 +1,6 @@
+build/
+dataframe
+*.exe
+*.o
+# files written by the tests / by `save`
+tests/out/
