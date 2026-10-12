@@ -1,5 +1,7 @@
 # c-dataframe-cli: a small pandas-like CSV interpreter in C
 
+**English** · [Español](README.es.md)
+
 [![CI](https://github.com/ortizserminio/c-dataframe-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/ortizserminio/c-dataframe-cli/actions/workflows/ci.yml)
 
 An interactive command-line program, written in plain C99 with no dependencies, that loads CSV files into in-memory **dataframes** and lets you inspect, sort, filter, transform and save them. It was my final practical for *Fundamentos de Programación* (Universidad Miguel Hernández, 2024/25), including the optional extensions. It builds on Linux, macOS and Windows.
@@ -76,6 +78,7 @@ The first commit is the code as I submitted it (only my e-mail address was remov
 * **`save` corrupted data:** numbers were written with one significant digit (`-339.39` → `-3e+02`), and dates as `DD/MM/(year+1900)`, so 2016 became **3916** in a format `load` could not read back.
 * **`filter` with a mistyped operator** reported success and replaced the active dataframe with an empty one.
 * **`prefix` after `sort`** filled the new column from the wrong rows (it mixed physical and display order).
+* **Use-after-free in `quarter`** (found by AddressSanitizer in CI): adding the new column `realloc`s the column array, and the function kept using a pointer into the old block. On Windows the block happened not to move, so it looked correct; on macOS it produced wrong quarters.
 * All `-Wall` warnings were cleaned up without changing behaviour.
 
 The portability work, tests, CI, bug analysis and this README were prepared with the help of an AI assistant. The program itself is my own course work.
