@@ -869,11 +869,14 @@ int main() {
             // Rellenar la nueva columna con los prefijos
             for (int i = 0; i < nuevaColumna.numFilas; i++) {
                 // Si el valor original es nulo, el prefijo también lo será
-                if (colOriginal->esNulo[dfActivo->indice[i]]) { // Usar dfActivo->indice[i]
+                // Columns are stored in physical row order and indice[] only
+                // affects display, so the new value for physical row i must
+                // come from physical row i of the original column.
+                if (colOriginal->esNulo[i]) {
                     nuevaColumna.esNulo[i] = 1;
                     ((char **)nuevaColumna.datos)[i] = NULL; // Asegurarse de que el puntero sea NULL
                 } else {
-                    char *valorOriginal = ((char **)colOriginal->datos)[dfActivo->indice[i]]; // Usar dfActivo->indice[i]
+                    char *valorOriginal = ((char **)colOriginal->datos)[i];
                     size_t len_original = strlen(valorOriginal);
                     size_t chars_to_copy = (n < len_original) ? n : len_original; // Copiar hasta 'n' o el largo real
 

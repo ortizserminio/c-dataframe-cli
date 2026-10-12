@@ -76,6 +76,13 @@ expect "view after sort asc shows rows in order" "FLFOD               2016/5/9  
 run "load examples/data1" "sort Column3 des" "view 1" "quit"
 expect "view after sort des shows the largest value first" "KJJKZ               2011/8/3            818.070000"
 
+run "load examples/data1" "sort Column3 des" "prefix Column1 2 P" "view 1" "quit"
+expect "prefix after sort uses the same row" "KJJKZ               2011/8/3            818.070000          WWFLW               KJ"
+
+run "load examples/data1" "sort Column3 des" "quarter Column2 Q" "view 2" "quit"
+expect "quarter after sort uses the same row (Aug -> Q3)" "KJJKZ               2011/8/3            818.070000          WWFLW               Q3"
+expect "quarter after sort uses the same row (May -> Q2)" "NMXBO               2006/5/1            688.120000          GTJCH               Q2"
+
 run "view" "quit"
 expect "commands need an active dataframe" "No hay dataframe activo"
 
