@@ -204,6 +204,8 @@ static void test_filter(void) {
     Dataframe* rest = Filtrar(df, txt, "neq", "FLFOD", TEXTO);
     CHECK(rest != NULL && rest->numFilas == 9);
 
+    CHECK(Filtrar(df, num, "between", "0", NUMERICO) == NULL);  // unknown operator
+
     if (pos) LiberarDataframe(pos);
     if (neg) LiberarDataframe(neg);
     if (ge) LiberarDataframe(ge);

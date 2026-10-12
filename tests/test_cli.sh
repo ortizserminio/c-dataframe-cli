@@ -51,6 +51,10 @@ expect "view 0 is rejected" "no puede ser 0"
 run "load examples/data1" "filter Column3 gt 0" "quit"
 expect "filter keeps matching rows" "Nuevo número de filas: 6"
 
+run "load examples/data1" "filter Column3 between 0" "view 1" "quit"
+expect "filter rejects an unknown operator" "No se pudo aplicar el filtro"
+expect "an unknown operator keeps the data" "[df0: 10,4]:>Column1"
+
 run "load examples/data1" "filter Column3 gt" "quit"
 expect "filter rejects wrong argument count" "filter necesita 3 argumentos"
 

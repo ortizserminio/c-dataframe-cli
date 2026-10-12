@@ -735,6 +735,14 @@ Dataframe* Filtrar(Dataframe *df, Columna *col, char *comp, char *val_str, TipoD
         return NULL; // DataFrame o columna de filtrado inválidos
     }
 
+    // Unknown operators used to match no row and silently replace the active
+    // dataframe with an empty one; reject them instead.
+    if (comp == NULL || (strcmp(comp, "eq") != 0 && strcmp(comp, "neq") != 0 &&
+                         strcmp(comp, "gt") != 0 && strcmp(comp, "lt") != 0 &&
+                         strcmp(comp, "get") != 0 && strcmp(comp, "let") != 0)) {
+        return NULL;
+    }
+
     // --- 1. Parsear el valor de comparación (val_str) al tipo de dato correcto ---
     void *val_parsed = NULL;
     // Un valor proporcionado por el usuario no se considera nulo para la comparación.
