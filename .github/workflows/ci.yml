@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / ${{ matrix.build }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        build: [plain]
+        include:
+          - os: ubuntu-latest
+            build: sanitizers
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test
+        if: matrix.build == 'plain'
+        run: make test CC=cc CFLAGS="-std=gnu99 -Wall -O2"
+      - name: Build and test with AddressSanitizer + UBSan
+        if: matrix.build == 'sanitizers'
+        env:
+          ASAN_OPTIONS: "detect_leaks=0:halt_on_error=1"
+          UBSAN_OPTIONS: "halt_on_error=1:print_stacktrace=1"
+        run: make test CC=gcc CFLAGS="-std=gnu99 -Wall -g -fno-omit-frame-pointer -fsanitize=address,undefined"
